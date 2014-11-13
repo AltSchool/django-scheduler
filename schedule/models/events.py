@@ -104,7 +104,7 @@ class Event(models.Model):
     def _create_occurrence(self, start, end=None):
         if end is None:
             end = start + (self.end - self.start)
-        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end)
+        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end, title=self.title, description=self.description)
 
     def get_occurrence(self, date):
         if timezone.is_naive(date) and django_settings.USE_TZ:
@@ -350,16 +350,6 @@ class Occurrence(models.Model):
         verbose_name = _("occurrence")
         verbose_name_plural = _("occurrences")
         app_label = 'schedule'
-
-    def __init__(self, *args, **kwargs):
-        super(Occurrence, self).__init__(*args, **kwargs)
-        try:
-            if self.title is None and self.event_id:
-                self.title = self.event.title
-            if self.description is None and self.event_id:
-                self.description = self.event.description
-        except:
-            pass
 
     def moved(self):
         return self.original_start != self.start or self.original_end != self.end
