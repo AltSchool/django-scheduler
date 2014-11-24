@@ -353,13 +353,6 @@ class Occurrence(models.Model):
         verbose_name_plural = _("occurrences")
         app_label = 'schedule'
 
-    def __init__(self, *args, **kwargs):
-        super(Occurrence, self).__init__(*args, **kwargs)
-        if self.title is None and self.event_id:
-            self.title = self.event.title
-        if self.description is None and self.event_id:
-            self.description = self.event.description
-
     def moved(self):
         return self.original_start != self.start or self.original_end != self.end
 
