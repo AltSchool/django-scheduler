@@ -108,7 +108,7 @@ class Event(models.Model):
     def _create_occurrence(self, start, end=None):
         if end is None:
             end = start + (self.end - self.start)
-        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end)
+        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end, title=self.title, description=self.description)
 
     def get_occurrence(self, date):
         if timezone.is_naive(date) and django_settings.USE_TZ:
