@@ -22,6 +22,7 @@ class EventManager(models.Manager):
     def get_for_object(self, content_object, distinction=None, inherit=True):
         return EventRelation.objects.get_events_for_object(content_object, distinction, inherit)
 
+
 class Event(models.Model):
     '''
     This model stores meta data for a date.  You can relate this data to many
@@ -77,9 +78,12 @@ class Event(models.Model):
         []
 `
         """
-        occurrences = self._get_occurrence_list(start, end)
-        persisted_occurrences = self.occurrence_set.all() if self.rule is not None else [] 
+        if self.pk:
+            # performance booster for occurrences relationship
+            Event.objects.select_related('occurrence').get(pk=self.pk)
+        persisted_occurrences = self.occurrence_set.all()
         occ_replacer = OccurrenceReplacer(persisted_occurrences)
+        occurrences = self._get_occurrence_list(start, end)
         final_occurrences = []
         for occ in occurrences:
             # replace occurrences with their persisted counterparts
@@ -104,7 +108,7 @@ class Event(models.Model):
     def _create_occurrence(self, start, end=None):
         if end is None:
             end = start + (self.end - self.start)
-        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end, title=self.title, description=self.description)
+        return Occurrence(event=self, start=start, end=end, original_start=start, original_end=end)
 
     def get_occurrence(self, date):
         if timezone.is_naive(date) and django_settings.USE_TZ:
@@ -115,8 +119,6 @@ class Event(models.Model):
         else:
             next_occurrence = self.start
         if next_occurrence == date:
-            if not rule: # one-time events do not have persisted occurrences
-              return self._create_occurrence(next_occurrence)
             try:
                 return Occurrence.objects.get(event=self, original_start=date)
             except Occurrence.DoesNotExist:
@@ -132,7 +134,7 @@ class Event(models.Model):
             if self.end_recurring_period and self.end_recurring_period < end:
                 end = self.end_recurring_period
             rule = self.get_rrule_object()
-            o_starts = rule.between(start - difference, end - difference, inc=True)
+            o_starts = rule.between(start, end, inc=True) or rule.between(start - difference, end - difference, inc=True) or rule.between(    start - (difference/2), end - (difference/2), inc=True)
             for o_start in o_starts:
                 o_end = o_start + difference
                 occurrences.append(self._create_occurrence(o_start, o_end))
@@ -350,6 +352,13 @@ class Occurrence(models.Model):
         verbose_name = _("occurrence")
         verbose_name_plural = _("occurrences")
         app_label = 'schedule'
+
+    def __init__(self, *args, **kwargs):
+        super(Occurrence, self).__init__(*args, **kwargs)
+        if self.title is None and self.event_id:
+            self.title = self.event.title
+        if self.description is None and self.event_id:
+            self.description = self.event.description
 
     def moved(self):
         return self.original_start != self.start or self.original_end != self.end
