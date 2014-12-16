@@ -244,7 +244,7 @@ def _cook_occurrences(period, occs, width, height):
     """
     last = {}
     # find out which occurrences overlap
-    for o in occs:
+    for o in occs[:]:
         o.data = period.classify_occurrence(o)
         if not o.data:
             occs.remove(o)
