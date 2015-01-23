@@ -8,38 +8,94 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Occurrence.created_on'
-        db.add_column(u'schedule_occurrence', 'created_on',
-                      self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, default=datetime.datetime(2013, 12, 28, 0, 0), blank=True),
-                      keep_default=False)
+        # Adding model 'Calendar'
+        db.create_table(u'schedule_calendar', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=200)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=200)),
+        ))
+        db.send_create_signal('schedule', ['Calendar'])
 
-        # Adding field 'Occurrence.updated_on'
-        db.add_column(u'schedule_occurrence', 'updated_on',
-                      self.gf('django.db.models.fields.DateTimeField')(auto_now=True, default=datetime.datetime(2013, 12, 28, 0, 0), blank=True),
-                      keep_default=False)
+        # Adding model 'CalendarRelation'
+        db.create_table(u'schedule_calendarrelation', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('calendar', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['schedule.Calendar'])),
+            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
+            ('object_id', self.gf('django.db.models.fields.IntegerField')()),
+            ('distinction', self.gf('django.db.models.fields.CharField')(max_length=20, null=True)),
+            ('inheritable', self.gf('django.db.models.fields.BooleanField')(default=True)),
+        ))
+        db.send_create_signal('schedule', ['CalendarRelation'])
 
-        # Adding field 'Event.updated_on'
-        db.add_column(u'schedule_event', 'updated_on',
-                      self.gf('django.db.models.fields.DateTimeField')(auto_now=True, default=datetime.datetime(2013, 12, 28, 0, 0), blank=True),
-                      keep_default=False)
+        # Adding model 'Rule'
+        db.create_table(u'schedule_rule', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=32)),
+            ('description', self.gf('django.db.models.fields.TextField')()),
+            ('frequency', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('params', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+        ))
+        db.send_create_signal('schedule', ['Rule'])
 
+        # Adding model 'Event'
+        db.create_table(u'schedule_event', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('start', self.gf('django.db.models.fields.DateTimeField')()),
+            ('end', self.gf('django.db.models.fields.DateTimeField')()),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('description', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='creator', null=True, to=orm['auth.User'])),
+            ('created_on', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
+            ('rule', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['schedule.Rule'], null=True, blank=True)),
+            ('end_recurring_period', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('calendar', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['schedule.Calendar'], null=True, blank=True)),
+        ))
+        db.send_create_signal('schedule', ['Event'])
 
-        # Changing field 'Event.created_on'
-        db.alter_column(u'schedule_event', 'created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True))
+        # Adding model 'EventRelation'
+        db.create_table(u'schedule_eventrelation', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('event', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['schedule.Event'])),
+            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
+            ('object_id', self.gf('django.db.models.fields.IntegerField')()),
+            ('distinction', self.gf('django.db.models.fields.CharField')(max_length=20, null=True)),
+        ))
+        db.send_create_signal('schedule', ['EventRelation'])
+
+        # Adding model 'Occurrence'
+        db.create_table(u'schedule_occurrence', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('event', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['schedule.Event'])),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('description', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('start', self.gf('django.db.models.fields.DateTimeField')()),
+            ('end', self.gf('django.db.models.fields.DateTimeField')()),
+            ('cancelled', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('original_start', self.gf('django.db.models.fields.DateTimeField')()),
+            ('original_end', self.gf('django.db.models.fields.DateTimeField')()),
+        ))
+        db.send_create_signal('schedule', ['Occurrence'])
+
 
     def backwards(self, orm):
-        # Deleting field 'Occurrence.created_on'
-        db.delete_column(u'schedule_occurrence', 'created_on')
+        # Deleting model 'Calendar'
+        db.delete_table(u'schedule_calendar')
 
-        # Deleting field 'Occurrence.updated_on'
-        db.delete_column(u'schedule_occurrence', 'updated_on')
+        # Deleting model 'CalendarRelation'
+        db.delete_table(u'schedule_calendarrelation')
 
-        # Deleting field 'Event.updated_on'
-        db.delete_column(u'schedule_event', 'updated_on')
+        # Deleting model 'Rule'
+        db.delete_table(u'schedule_rule')
 
+        # Deleting model 'Event'
+        db.delete_table(u'schedule_event')
 
-        # Changing field 'Event.created_on'
-        db.alter_column(u'schedule_event', 'created_on', self.gf('django.db.models.fields.DateTimeField')())
+        # Deleting model 'EventRelation'
+        db.delete_table(u'schedule_eventrelation')
+
+        # Deleting model 'Occurrence'
+        db.delete_table(u'schedule_occurrence')
+
 
     models = {
         u'auth.group': {
@@ -96,7 +152,7 @@ class Migration(SchemaMigration):
         'schedule.event': {
             'Meta': {'object_name': 'Event'},
             'calendar': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['schedule.Calendar']", 'null': 'True', 'blank': 'True'}),
-            'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'created_on': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'creator': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'creator'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
@@ -104,8 +160,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'rule': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['schedule.Rule']", 'null': 'True', 'blank': 'True'}),
             'start': ('django.db.models.fields.DateTimeField', [], {}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'updated_on': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
         'schedule.eventrelation': {
             'Meta': {'object_name': 'EventRelation'},
@@ -118,7 +173,6 @@ class Migration(SchemaMigration):
         'schedule.occurrence': {
             'Meta': {'object_name': 'Occurrence'},
             'cancelled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             'event': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['schedule.Event']"}),
@@ -126,8 +180,7 @@ class Migration(SchemaMigration):
             'original_end': ('django.db.models.fields.DateTimeField', [], {}),
             'original_start': ('django.db.models.fields.DateTimeField', [], {}),
             'start': ('django.db.models.fields.DateTimeField', [], {}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'updated_on': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'})
         },
         'schedule.rule': {
             'Meta': {'object_name': 'Rule'},
