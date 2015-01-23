@@ -59,7 +59,7 @@ class Event(models.Model):
     def get_absolute_url(self):
         return reverse('event', args=[self.id])
 
-    def get_occurrences(self, start, end):
+    def get_occurrences(self, start, end, skip_booster=False):
         """
         >>> rule = Rule(frequency = "MONTHLY", name = "Monthly")
         >>> rule.save()
@@ -78,7 +78,7 @@ class Event(models.Model):
         []
 `
         """
-        if self.pk:
+        if self.pk and not skip_booster:
             # performance booster for occurrences relationship
             Event.objects.select_related('occurrence').get(pk=self.pk)
         persisted_occurrences = self.occurrence_set.all()
