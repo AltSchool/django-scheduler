@@ -3,6 +3,7 @@
 from setuptools import setup
 
 
+
 setup(
     name='django-scheduler',
     version='0.7.2',
