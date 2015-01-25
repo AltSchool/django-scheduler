@@ -3,6 +3,7 @@
 from setuptools import setup
 
 
+
 setup(
     name='django-scheduler',
     version='0.7.2',
@@ -32,13 +33,12 @@ setup(
                  'Programming Language :: Python',
                  'Topic :: Utilities'],
     install_requires=[
-        'Django>=1.5',
+        'Django>=1.7',
         'argparse==1.1',
         'python-dateutil>=2.1',
         'pytz>=2013.9',
         'six>=1.3.0',
         'vobject>=0.8.1c',
-        'South>=0.8.4',
         'django-annoying>=0.7.9',
         'coverage>=3.6',
     ],
