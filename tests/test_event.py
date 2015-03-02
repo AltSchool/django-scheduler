@@ -2,6 +2,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 import pytz
+import dateutil
 
 from django.test import TestCase
 from django.utils import timezone
@@ -25,7 +26,7 @@ class TestEvent(TestCase):
                })
 
     def __create_recurring_event(self, title, start, end, end_recurring, rule, cal):
-         return Event(**{
+         return Event.objects.create(**{
                 'title': title,
                 'start': start,
                 'end': end,
@@ -68,6 +69,25 @@ class TestEvent(TestCase):
         self.assertEquals(["%s to %s" % (o.start, o.end) for o in occurrences],
                           ['2008-01-12 08:00:00+00:00 to 2008-01-12 09:00:00+00:00',
                            '2008-01-19 08:00:00+00:00 to 2008-01-19 09:00:00+00:00'])
+
+    def test_recurring_event_get_occurrences_dst(self):
+        tz = dateutil.tz.gettz("US/Pacific")
+        calendar = Calendar.objects.create(name="test calender")
+        rule = Rule.objects.create(frequency="WEEKLY", params="tzid:US/Pacific")
+
+        recurring_event = self.__create_recurring_event(
+          'Recurring event test get_occurrences over DST boundary',
+          datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
+          datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
+          datetime.datetime(2015, 4, 1, 8, 0, 0, tzinfo=tz),
+          rule,
+          calendar)
+
+        occurrences = recurring_event.get_occurrences(
+                                    datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
+                                    datetime.datetime(2013, 3, 11, 8, 0, 0, tzinfo=tz))
+
+        self.assertEquals(['a', 'b'], occurrences)
 
     def test_event_get_occurrences_after(self):
 

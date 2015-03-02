@@ -40,6 +40,9 @@ class Rule(models.Model):
         ** byminute
         ** bysecond
         ** byeaster
+
+      Custom parameters:
+        ** tzid: timezone name to use in generation logic
     """
     name = models.CharField(_("name"), max_length=32)
     description = models.TextField(_("description"))
@@ -76,7 +79,10 @@ class Rule(models.Model):
         for param in params:
             param = param.split(':')
             if len(param) == 2:
-                param = (str(param[0]), [int(p) for p in param[1].split(',')])
+                try:
+                  param = (str(param[0]), [int(p) for p in param[1].split(',')])
+                except:
+                  param = (str(param[0]), [str(p) for p in param[1].split(',')])
                 if len(param[1]) == 1:
                     param = (param[0], param[1][0])
                 param_dict.append(param)
