@@ -32,7 +32,7 @@ setup(
                  'Programming Language :: Python',
                  'Topic :: Utilities'],
     install_requires=[
-        'python-dateutil>=2.4.0-20140303',
+        'python-dateutil>=2.1.post20140303',
         'Django>=1.7',
         'argparse==1.1',
         'pytz>=2013.9',
@@ -41,7 +41,7 @@ setup(
         'django-annoying>=0.7.9',
         'coverage>=3.6',
     ],
-    dependency_links = ['http://github.com/AltSchool/dateutil/tarball/master#egg=python-dateutil-2.4.0-20140303'],
+    dependency_links = ['http://github.com/AltSchool/dateutil/tarball/master#egg=python-dateutil-2.1.post20140303'],
     license='BSD',
     test_suite='runtests.runtests',
 )
