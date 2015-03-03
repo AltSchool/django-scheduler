@@ -84,6 +84,13 @@ class TestEvent(TestCase):
         before_dst = datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=pacific) # 8am US/Pacific March 4th, 2015
         after_dst = before_dst + relativedelta.relativedelta(days=7)        # 8am US/Pacific March 11th, 2015
 
+        # make sure astimezone works properly to convert between timezones
+        self.assertEquals(datetime.datetime(2015, 3, 4, 16, 0, 0, tzinfo=utc), before_dst.astimezone(utc))
+
+        # make sure relativedelta works properly across DST boundaries
+        self.assertEquals(datetime.datetime(2015, 3, 11, 8, 0, 0, tzinfo=pacific), after_dst)
+        self.assertEqual(datetime.datetime(2015, 3, 11, 15, 0, 0, tzinfo=utc), after_dst.astimezone(utc)) # note that the UTC offset has changed from -8 to -7
+
         recurring_event = self.__create_recurring_event(
           'Recurring event test get_occurrences over DST boundary',
           before_dst.astimezone(utc),
