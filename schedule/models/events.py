@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings as django_settings
 import pytz
-from dateutil import rrule
+from altschool_dateutil import rrule
 
 from django.contrib.contenttypes import generic
 from django.db import models

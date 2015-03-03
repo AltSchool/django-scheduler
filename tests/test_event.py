@@ -2,7 +2,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 import pytz
-import dateutil
+from altschool_dateutil import tz, relativedelta
 
 from django.test import TestCase
 from django.utils import timezone
@@ -71,23 +71,27 @@ class TestEvent(TestCase):
                            '2008-01-19 08:00:00+00:00 to 2008-01-19 09:00:00+00:00'])
 
     def test_recurring_event_get_occurrences_dst(self):
-        tz = dateutil.tz.gettz("US/Pacific")
+        # PostgreSQL stores all datetimes in UTC, therefore we need to use a custom 
+        # rule parameter to support forcing the timezone to a known target
+        pacific = tz.gettz("US/Pacific")
+        utc = tz.gettz("UTC")
+
         calendar = Calendar.objects.create(name="test calender")
         rule = Rule.objects.create(frequency="WEEKLY", params="tzid:US/Pacific")
 
+        before_dst = datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=pacific) # 8am US/Pacific March 4th, 2015
+        after_dst = before_dst + relativedelta.relativedelta(days=7)        # 8am US/Pacific March 11th, 2015
+
         recurring_event = self.__create_recurring_event(
           'Recurring event test get_occurrences over DST boundary',
-          datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
-          datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
-          datetime.datetime(2015, 4, 1, 8, 0, 0, tzinfo=tz),
+          before_dst.astimezone(utc),
+          before_dst.astimezone(utc),
+          after_dst.astimezone(utc),
           rule,
           calendar)
 
-        occurrences = recurring_event.get_occurrences(
-                                    datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=tz),
-                                    datetime.datetime(2013, 3, 11, 8, 0, 0, tzinfo=tz))
-
-        self.assertEquals(['a', 'b'], occurrences)
+        occurrences = recurring_event.get_occurrences(before_dst, after_dst)
+        self.assertEquals([before_dst, after_dst], [o.start for o in occurrences])
 
     def test_event_get_occurrences_after(self):
 

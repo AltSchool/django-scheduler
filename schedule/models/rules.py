@@ -1,4 +1,4 @@
-from dateutil.rrule import DAILY, MONTHLY, WEEKLY, YEARLY, HOURLY, MINUTELY, SECONDLY
+from altschool_dateutil.rrule import DAILY, MONTHLY, WEEKLY, YEARLY, HOURLY, MINUTELY, SECONDLY
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
