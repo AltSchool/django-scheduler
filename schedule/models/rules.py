@@ -12,76 +12,94 @@ freqs = (("YEARLY", _("Yearly")),
          ("SECONDLY", _("Secondly")))
 
 
+class RuleManager(models.Manager):
+
+  def get_or_create_by_frequency_and_timezone(self, frequency, timezone):
+    rule = self.filter(frequency=frequency, params__icontains=timezone)
+    if rule:
+      return rule[0]
+    else:
+      params = "tzid:%s" % timezone
+      return self.create(frequency=frequency, params=params, name="%s (%s)" % (frequency, timezone))
+
+
 class Rule(models.Model):
+
+  """
+  This defines a rule by which an event will recur.  This is defined by the
+  rrule in the dateutil documentation.
+
+  * name - the human friendly name of this kind of recursion.
+  * description - a short description describing this type of recursion.
+  * frequency - the base recurrence period
+  * param - extra params required to define this type of recursion. The params
+    should follow this format:
+
+      param = [rruleparam:value;]*
+      rruleparam = see list below
+      value = int[,int]*
+
+    The options are: (documentation for these can be found at
+    http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57)
+      ** count
+      ** bysetpos
+      ** bymonth
+      ** bymonthday
+      ** byyearday
+      ** byweekno
+      ** byweekday
+      ** byhour
+      ** byminute
+      ** bysecond
+      ** byeaster
+      ** tzid
+  """
+  objects = RuleManager()
+
+  name = models.CharField(_("name"), max_length=32)
+  description = models.TextField(_("description"))
+  frequency = models.CharField(_("frequency"), choices=freqs, max_length=10)
+  params = models.TextField(_("params"), null=True, blank=True)
+
+  class Meta:
+    verbose_name = _('rule')
+    verbose_name_plural = _('rules')
+    app_label = 'schedule'
+
+  def rrule_frequency(self):
+    compatibiliy_dict = {
+        'DAILY': DAILY,
+        'MONTHLY': MONTHLY,
+        'WEEKLY': WEEKLY,
+        'YEARLY': YEARLY,
+        'HOURLY': HOURLY,
+        'MINUTELY': MINUTELY,
+        'SECONDLY': SECONDLY
+    }
+    return compatibiliy_dict[self.frequency]
+
+  def get_params(self):
     """
-    This defines a rule by which an event will recur.  This is defined by the
-    rrule in the dateutil documentation.
-
-    * name - the human friendly name of this kind of recursion.
-    * description - a short description describing this type of recursion.
-    * frequency - the base recurrence period
-    * param - extra params required to define this type of recursion. The params
-      should follow this format:
-
-        param = [rruleparam:value;]*
-        rruleparam = see list below
-        value = int[,int]*
-
-      The options are: (documentation for these can be found at
-      http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57)
-        ** count
-        ** bysetpos
-        ** bymonth
-        ** bymonthday
-        ** byyearday
-        ** byweekno
-        ** byweekday
-        ** byhour
-        ** byminute
-        ** bysecond
-        ** byeaster
+    >>> rule = Rule(params = "count:1;bysecond:1;byminute:1,2,4,5")
+    >>> rule.get_params()
+    {'count': 1, 'byminute': [1, 2, 4, 5], 'bysecond': 1}
     """
-    name = models.CharField(_("name"), max_length=32)
-    description = models.TextField(_("description"))
-    frequency = models.CharField(_("frequency"), choices=freqs, max_length=10)
-    params = models.TextField(_("params"), null=True, blank=True)
+    if self.params is None:
+      return {}
+    params = self.params.split(';')
+    param_dict = []
+    for param in params:
+      param = param.split(':')
+      if len(param) == 2:
+        try:
+          param = (str(param[0]), [int(p) for p in param[1].split(',')])
+        except:
+          param = (str(param[0]), [str(p) for p in param[1].split(',')])
+        if len(param[1]) == 1:
+          param = (param[0], param[1][0])
+        param_dict.append(param)
+    return dict(param_dict)
 
-    class Meta:
-        verbose_name = _('rule')
-        verbose_name_plural = _('rules')
-        app_label = 'schedule'
-
-    def rrule_frequency(self):
-        compatibiliy_dict = {
-                'DAILY': DAILY,
-                'MONTHLY': MONTHLY,
-                'WEEKLY': WEEKLY,
-                'YEARLY': YEARLY,
-                'HOURLY': HOURLY,
-                'MINUTELY': MINUTELY,
-                'SECONDLY': SECONDLY
-                }
-        return compatibiliy_dict[self.frequency]
-
-    def get_params(self):
-        """
-        >>> rule = Rule(params = "count:1;bysecond:1;byminute:1,2,4,5")
-        >>> rule.get_params()
-        {'count': 1, 'byminute': [1, 2, 4, 5], 'bysecond': 1}
-        """
-        if self.params is None:
-            return {}
-        params = self.params.split(';')
-        param_dict = []
-        for param in params:
-            param = param.split(':')
-            if len(param) == 2:
-                param = (str(param[0]), [int(p) for p in param[1].split(',')])
-                if len(param[1]) == 1:
-                    param = (param[0], param[1][0])
-                param_dict.append(param)
-        return dict(param_dict)
-
-    def __unicode__(self):
-        """Human readable string for Rule"""
-        return 'Rule %s params %s' % (self.name, self.params)
+  def __unicode__(self):
+    """Human readable string for Rule"""
+    return 'Rule %s params %s' % (self.name, self.params)

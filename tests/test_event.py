@@ -2,6 +2,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 import pytz
+from dateutil import tz, relativedelta
 
 from django.test import TestCase
 from django.utils import timezone
@@ -25,7 +26,7 @@ class TestEvent(TestCase):
                })
 
     def __create_recurring_event(self, title, start, end, end_recurring, rule, cal):
-         return Event(**{
+         return Event.objects.create(**{
                 'title': title,
                 'start': start,
                 'end': end,
@@ -68,6 +69,31 @@ class TestEvent(TestCase):
         self.assertEquals(["%s to %s" % (o.start, o.end) for o in occurrences],
                           ['2008-01-12 08:00:00+00:00 to 2008-01-12 09:00:00+00:00',
                            '2008-01-19 08:00:00+00:00 to 2008-01-19 09:00:00+00:00'])
+
+    def test_recurring_event_get_occurrences_dst(self):
+        # PostgreSQL stores all datetimes in UTC, therefore we need to use a custom 
+        # rule parameter to support forcing the timezone to a known target
+        pacific_tz_name = "US/Pacific"
+
+        pacific = tz.gettz(pacific_tz_name)
+        utc = tz.gettz("UTC")
+
+        calendar = Calendar.objects.create(name="test calender")
+        rule = Rule.objects.get_or_create_by_frequency_and_timezone("WEEKLY", pacific_tz_name)
+
+        before_dst = datetime.datetime(2015, 3, 4, 8, 0, 0, tzinfo=pacific) # 8am US/Pacific March 4th, 2015
+        after_dst = before_dst + relativedelta.relativedelta(days=7)        # 8am US/Pacific March 11th, 2015
+
+        recurring_event = self.__create_recurring_event(
+          'Recurring event test get_occurrences over DST boundary',
+          before_dst.astimezone(utc),
+          before_dst.astimezone(utc),
+          after_dst.astimezone(utc),
+          rule,
+          calendar)
+
+        occurrences = recurring_event.get_occurrences(before_dst, after_dst)
+        self.assertEquals([before_dst, after_dst], [o.start for o in occurrences])
 
     def test_event_get_occurrences_after(self):
 
