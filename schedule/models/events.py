@@ -76,8 +76,8 @@ class Event(models.Model):
         >>> occurrences = event.get_occurrences(datetime.datetime(2008,1,24), datetime.datetime(2008,3,2))
         >>> ["%s to %s" %(o.start, o.end) for o in occurrences]
         []
-`
         """
+
         if self.pk and not skip_booster:
             # performance booster for occurrences relationship
             Event.objects.select_related('occurrence').get(pk=self.pk)
@@ -103,7 +103,7 @@ class Event(models.Model):
         if self.rule is not None:
             params = self.rule.get_params()
             frequency = self.rule.rrule_frequency()
-            return rrule.rrule(frequency, dtstart=self.start, **params)
+            return rrule.rrule(frequency, dtstart=self.start,  **params)
 
     def _create_occurrence(self, start, end=None):
         if end is None:
@@ -124,20 +124,25 @@ class Event(models.Model):
             except Occurrence.DoesNotExist:
                 return self._create_occurrence(next_occurrence)
 
+
     def _get_occurrence_list(self, start, end):
         """
         returns a list of occurrences for this event from start to end.
         """
+        
         difference = (self.end - self.start)
         if self.rule is not None:
             occurrences = []
             if self.end_recurring_period and self.end_recurring_period < end:
                 end = self.end_recurring_period
+
             rule = self.get_rrule_object()
-            o_starts = rule.between(start, end, inc=True) or rule.between(start - difference, end - difference, inc=True) or rule.between(    start - (difference/2), end - (difference/2), inc=True)
+            o_starts = rule.between(start-difference, end, inc=True)
+            
             for o_start in o_starts:
                 o_end = o_start + difference
                 occurrences.append(self._create_occurrence(o_start, o_end))
+
             return occurrences
         else:
             # check if event is in the period
