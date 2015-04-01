@@ -35,6 +35,111 @@ class TestEvent(TestCase):
                 'calendar': cal
                })
 
+
+    def test_get_occurrences__years_old_events(self):
+        """
+        Test events across year-long boundaries. 
+        TODO(faisal): Time to calculate events within start-end grows with the distance of start
+        from the first event start. See how to optimize for that in the future
+        """
+        cal = Calendar(name="MyCal")
+        cal.save()
+        rule_weekly = Rule(frequency="WEEKLY")
+        rule_weekly.save()
+
+        # Rule that was defined previous year and occurrences are fetched for next year.
+        event_params = {
+            'title': 'Edge case event test one',
+            'start': datetime.datetime(2014, 12, 29, 8, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2014, 12, 29, 8, 0, tzinfo=pytz.utc),
+            'rule': rule_weekly
+        }
+        
+        weekly_point_event = Event.objects.create(**event_params)
+        occ1 = weekly_point_event.get_occurrences(datetime.datetime(2015, 1, 5, 8, 0, tzinfo=pytz.utc),
+                                                datetime.datetime(2015, 2, 5, 8, 0, tzinfo=pytz.utc))
+        self.assertEquals(5, len(occ1))
+
+        # Rule that was defined several years ago and occurrences are fetched for a much later time
+        event_params = {
+            'title': 'Edge case event test one',
+            'start': datetime.datetime(2009, 11, 02, 8, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2009, 11, 02, 8, 0, tzinfo=pytz.utc),
+            'rule': rule_weekly
+        }
+
+        event = Event.objects.create(**event_params)
+        occ2 = event.get_occurrences(datetime.datetime(2015, 1, 5, 8, 0, tzinfo=pytz.utc),
+                                     datetime.datetime(2015, 2, 5, 8, 0, tzinfo=pytz.utc))
+
+        self.assertEquals(5, len(occ2))
+        
+    #@profile
+    def test_get_occurrences___cross_event_boundaries(self):
+        """
+        Event that was defined in the past that crosses day boundaries. The assumed behavior is that
+        event occurrences that started before the given start parameter for get_occurrences() but
+        finished after that parameter should be included. 
+
+        eg. 
+        Given: Event(rule='Daily', start="3/23/2015 10PM", end="3/24/2015 2AM")
+        Compute: get_occurrences() between 3/30/2015 12AM and 3/31/2015 12AM
+        Result: Should get 2 events, one fo th epar that overlaps the beginning of 3/30 and one that 
+          overlaps the night/early morning for 3/30-3/31
+        """
+        rule_daily = Rule(frequency="DAILY")
+        rule_daily.save()
+        
+        event_params = {
+            'title': 'Daily event that crosses day boundaries',
+            'start': datetime.datetime(2015, 3, 23, 22, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2015, 3, 24, 2, 0, tzinfo=pytz.utc),
+            'rule': rule_daily
+        }
+        
+        event = Event.objects.create(**event_params)
+        occ1 = event.get_occurrences(datetime.datetime(2015, 3, 30, 0, 0, tzinfo=pytz.utc),
+                                     datetime.datetime(2015, 4, 3, 23, 59, tzinfo=pytz.utc))
+
+        self.assertEqual(6, len(occ1))
+        self.assertEqual(datetime.datetime(2015, 3, 29, 22, 0, tzinfo=pytz.utc), occ1[0].start)
+        self.assertEqual(datetime.datetime(2015, 3, 30, 2, 0, tzinfo=pytz.utc), occ1[0].end)
+
+        self.assertEqual(datetime.datetime(2015, 4, 3, 22, 0, tzinfo=pytz.utc), occ1[-1].start)
+        self.assertEqual(datetime.datetime(2015, 4, 4, 2, 0, tzinfo=pytz.utc), occ1[-1].end)
+
+        event_params = {
+            'title': 'Daily event that crosses day boundaries',
+            'start': datetime.datetime(2015, 3, 23, 22, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2015, 3, 24, 2, 0, tzinfo=pytz.utc),
+            'rule': rule_daily
+        }
+        event = Event.objects.create(**event_params)
+        occ2 = event.get_occurrences(datetime.datetime(2015, 3, 31, 0, 0, tzinfo=pytz.utc),
+                                     datetime.datetime(2015, 4, 1, 0, 0, tzinfo=pytz.utc))
+        self.assertEqual(2, len(occ2))
+        self.assertEqual(datetime.datetime(2015, 3, 30, 22, 0, tzinfo=pytz.utc), occ2[0].start)
+        self.assertEqual(datetime.datetime(2015, 3, 31, 2, 0, tzinfo=pytz.utc), occ2[0].end)
+        self.assertEqual(datetime.datetime(2015, 3, 31, 22, 0, tzinfo=pytz.utc), occ2[1].start)
+        self.assertEqual(datetime.datetime(2015, 4, 1, 2, 0, tzinfo=pytz.utc), occ2[1].end)
+        
+        rule_weekly = Rule(frequency="WEEKLY")
+        rule_weekly.save()
+        event_params = {
+            'title': 'Daily event that crosses day boundaries',
+            'start': datetime.datetime(2015, 3, 23, 22, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2015, 3, 24, 2, 0, tzinfo=pytz.utc),
+            'rule': rule_weekly
+        }
+        event = Event.objects.create(**event_params)
+        occ3 = event.get_occurrences(datetime.datetime(2015, 3, 31, 0, 0, tzinfo=pytz.utc),
+                                     datetime.datetime(2015, 4, 1, 0, 0, tzinfo=pytz.utc))
+        self.assertEqual(1, len(occ3))
+        self.assertEqual(datetime.datetime(2015, 3, 30, 22, 0, tzinfo=pytz.utc), occ3[0].start)
+        self.assertEqual(datetime.datetime(2015, 3, 31, 2, 0, tzinfo=pytz.utc), occ3[0].end)
+
+        
+
     def test_edge_case_events(self):
         cal = Calendar(name="MyCal")
         cal.save()
@@ -102,6 +207,8 @@ class TestEvent(TestCase):
         occurrences = recurring_event.get_occurrences(before_dst, after_dst)
         self.assertEquals([before_dst, after_dst], [o.start for o in occurrences])
 
+
+        
     def test_event_get_occurrences_after(self):
 
         cal = Calendar(name="MyCal")
@@ -185,6 +292,7 @@ class TestEvent(TestCase):
         #occurrence2 = recurring_event.occurrences_after(datetime.datetime(2008, 1, 5, tzinfo=pytz.utc)).next()
         #self.assertEqual(occurrence, occurrence2)
 
+        
     def test_recurring_event_get_occurrence(self):
 
         cal = Calendar(name="MyCal")
