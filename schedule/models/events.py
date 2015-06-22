@@ -16,6 +16,7 @@ from schedule.conf import settings
 from schedule.models.rules import Rule
 from schedule.models.calendars import Calendar
 from schedule.utils import OccurrenceReplacer
+import cPickle as pickle
 
 
 class EventManager(models.Manager):
@@ -43,6 +44,8 @@ class Event(models.Model):
     calendar = models.ForeignKey(Calendar, null=True, blank=True, verbose_name=_("calendar"))
     objects = EventManager()
 
+    recent_start = models.TextField(null=True)
+
     class Meta:
         verbose_name = _('event')
         verbose_name_plural = _('events')
@@ -58,6 +61,82 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         return reverse('event', args=[self.id])
+
+    def get_recent_start_validated(self):
+        """
+         Unserializes and validates self.recent_start. Returns the dictionary
+         represented by self.recent_start if all goes well, or None if there
+         is a validation error.
+         @return recent_start converted to object if it's valid given current
+         state of event; None if it doesn't exist or is invalid.
+        """
+        if self.recent_start == None:
+            return None
+
+        recent_start_data = pickle.loads(str(self.recent_start))
+
+        if (recent_start_data['event']['start'] == self.start and
+              recent_start_data['event']['rule'] == self.rule):
+            return recent_start_data
+        else:
+            return None
+
+
+    @property
+    def recent_occurrence_start(self):
+        """
+        A lazy loaded property that ensures we unpickle to get the recent
+        occurrence start only once. Use similar pattern for other properties
+        :return:
+        """
+        if not hasattr(self, '__recent_start'):
+            setattr(self, '__recent_start', self.get_recent_start_validated())
+        recent_start = getattr(self, '__recent_start', None)
+        if (recent_start is not None
+            and 'occurrence' in recent_start
+            and 'start' in recent_start['occurrence']):
+            return recent_start['occurrence']['start']
+        else:
+            return None
+
+
+    def build_recent_start_payload(self, occurrence):
+        """
+        Builds a payload to store in self.recent_start and returns the result
+        @return string representation of payload representing recent start.
+        """
+        event_occurrence_data = {
+            'event': {
+                'start': self.start,
+                'rule': self.rule
+            },
+            'occurrence': {
+                'start': occurrence.start,
+                'end': occurrence.end
+            }
+        }
+        event_occurrence_payload = pickle.dumps(event_occurrence_data)
+        return event_occurrence_payload
+
+
+    def get_optimized_rrule_object(self, period_start):
+        """
+        An optimized version of self.get_rrule_object that examines if we have
+        a recent start that was calculated for this event and uses that as the
+        start of the rrule dtstart if it falls earlier than the desired
+        period_start
+        """
+        if self.rule is not None:
+            params = self.rule.get_params()
+            frequency = self.rule.rrule_frequency()
+
+            if self.recent_occurrence_start is not None and self.recent_occurrence_start < period_start:
+                # Optimization: use recent_occurrence_start for the rrule object
+                # to calculate occurrences.
+                return rrule.rrule(frequency, dtstart=self.recent_occurrence_start,  **params)
+            else:
+                return rrule.rrule(frequency, dtstart=self.start,  **params)
+
 
     def get_occurrences(self, start, end, skip_booster=False):
         """
@@ -136,7 +215,7 @@ class Event(models.Model):
             if self.end_recurring_period and self.end_recurring_period < end:
                 end = self.end_recurring_period
 
-            rule = self.get_rrule_object()
+            rule = self.get_optimized_rrule_object(start-difference)
             o_starts = rule.between(start-difference, end, inc=True)
             
             for o_start in o_starts:

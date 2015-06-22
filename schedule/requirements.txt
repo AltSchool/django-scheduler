@@ -1,5 +1,5 @@
 -e git://github.com/AltSchool/dateutil#egg=python-dateutil
-Django==1.6
+Django==1.6.8
 argparse==1.1
 django-coverage==1.2.4
 django-nose==1.1
