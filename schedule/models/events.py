@@ -138,8 +138,15 @@ class Event(models.Model):
                 return rrule.rrule(frequency, dtstart=self.start,  **params)
 
 
-    def get_occurrences(self, start, end, skip_booster=False):
+
+    def get_occurrences(self, start, end, skip_booster=False, persisted_occurrences=None):
         """
+        :param persisted_occurrences - In some contexts (such as models
+        post_constraints), we need to ensure that we get the latest set of
+        persisted_occurrences and avoid using the prefetch cache which may be
+        stale. Client code can pass its own persisted_occurrences using the
+        `all().all()` pattern in these cases.
+
         >>> rule = Rule(frequency = "MONTHLY", name = "Monthly")
         >>> rule.save()
         >>> event = Event(rule=rule, start=datetime.datetime(2008,1,1,tzinfo=pytz.utc), end=datetime.datetime(2008,1,2))
@@ -160,7 +167,10 @@ class Event(models.Model):
         if self.pk and not skip_booster:
             # performance booster for occurrences relationship
             Event.objects.select_related('occurrence').get(pk=self.pk)
-        persisted_occurrences = self.occurrence_set.all()
+
+        if persisted_occurrences is None:
+            persisted_occurrences = self.occurrence_set.all()
+
         occ_replacer = OccurrenceReplacer(persisted_occurrences)
         occurrences = self._get_occurrence_list(start, end)
         final_occurrences = []
