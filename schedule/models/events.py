@@ -17,7 +17,7 @@ from schedule.models.rules import Rule
 from schedule.models.calendars import Calendar
 from schedule.utils import OccurrenceReplacer
 import cPickle as pickle
-
+from schedule.utils import get_boolean
 
 class EventManager(models.Manager):
     def get_for_object(self, content_object, distinction=None, inherit=True):
@@ -76,7 +76,7 @@ class Event(models.Model):
         recent_start_data = pickle.loads(str(self.recent_start))
 
         if (recent_start_data['event']['start'] == self.start and
-              recent_start_data['event']['rule'] == self.rule):
+              recent_start_data['event']['rule_id'] == self.rule.pk):
             return recent_start_data
         else:
             return None
@@ -89,9 +89,9 @@ class Event(models.Model):
         occurrence start only once. Use similar pattern for other properties
         :return:
         """
-        if not hasattr(self, '__recent_start'):
-            setattr(self, '__recent_start', self.get_recent_start_validated())
-        recent_start = getattr(self, '__recent_start', None)
+        if not hasattr(self, '_recent_start'):
+            setattr(self, '_recent_start', self.get_recent_start_validated())
+        recent_start = getattr(self, '_recent_start', None)
         if (recent_start is not None
             and 'occurrence' in recent_start
             and 'start' in recent_start['occurrence']):
@@ -108,7 +108,7 @@ class Event(models.Model):
         event_occurrence_data = {
             'event': {
                 'start': self.start,
-                'rule': self.rule
+                'rule_id': self.rule.pk
             },
             'occurrence': {
                 'start': occurrence.start,
@@ -218,14 +218,18 @@ class Event(models.Model):
         """
         returns a list of occurrences for this event from start to end.
         """
-        
         difference = (self.end - self.start)
         if self.rule is not None:
             occurrences = []
             if self.end_recurring_period and self.end_recurring_period < end:
                 end = self.end_recurring_period
 
-            rule = self.get_optimized_rrule_object(start-difference)
+            rule = None
+            if get_boolean('ENABLE_OPTIMIZED_RRULE_GENERATION', False):
+                rule = self.get_optimized_rrule_object(start-difference)
+            else:
+                rule = self.get_rrule_object()
+
             o_starts = rule.between(start-difference, end, inc=True)
             
             for o_start in o_starts:

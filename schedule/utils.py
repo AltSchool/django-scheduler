@@ -6,7 +6,20 @@ from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.utils import timezone
 from schedule.conf.settings import CHECK_EVENT_PERM_FUNC, CHECK_CALENDAR_PERM_FUNC
+import os
 
+def get_boolean(flag, default):
+    """
+    A Helper function that interprets the environment flag passed as a boolean.
+    Only values mapped to 'True' (case insensitive) get interpreted as True.
+    :param flag: String representing the environment variable to fetch
+    :param default: Default value to use.
+    :return: True if flag is set to "True". False if not. Default if flag
+    isn't set at all.
+    """
+    if os.environ.get(flag):
+        return os.environ.get(flag).lower() == 'true'
+    return default
 
 class EventListManager(object):
     """
