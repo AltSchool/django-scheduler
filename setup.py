@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='django-scheduler',
-    version='10.7.3',
+    version='10.7.4',
     description='A calendaring app for Django.',
     author='Leonardo Lazzaro',
     author_email='lazzaroleonardo@gmail.com',

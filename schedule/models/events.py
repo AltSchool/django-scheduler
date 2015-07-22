@@ -179,7 +179,7 @@ class Event(models.Model):
             if occ_replacer.has_occurrence(occ):
                 p_occ = occ_replacer.get_occurrence(occ)
                 # ...but only if they are within this period
-                if p_occ.start < end and p_occ.end >= start:
+                if p_occ.start <= end and p_occ.end >= start:
                     final_occurrences.append(p_occ)
             else:
                 final_occurrences.append(occ)
@@ -239,7 +239,7 @@ class Event(models.Model):
             return occurrences
         else:
             # check if event is in the period
-            if self.start < end and self.end > start:
+            if self.start <= end and self.end >= start:
                 return [self._create_occurrence(self.start)]
             else:
                 return []
