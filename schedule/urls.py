@@ -12,8 +12,9 @@ from schedule.views import DeleteEventView
 urlpatterns = patterns(
     '',
     # urls for Calendars
+    # Hack of just getting the most recent calendars.
     url(r'^calendar/$',
-        ListView.as_view(queryset=Calendar.objects.all().order_by('name'),
+        ListView.as_view(queryset=Calendar.objects.all().filter(id__gt=1550).order_by('name'),
                          template_name='schedule/calendar_list.html'),
         name="calendar_list"),
 
