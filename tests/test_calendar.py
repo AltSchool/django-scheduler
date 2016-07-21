@@ -130,3 +130,20 @@ class TestCalendar(TestCase):
         calendar.add_event_url()
         relation = CalendarRelation.objects.create_relation(calendar, rule)
         relation.__unicode__()
+
+    def test_last_update_time(self):
+        calendar = Calendar.objects.create(name='My Cal')
+        self.assertIsNotNone(calendar.last_update_time)
+
+        calendar.name = 'New name'
+        previous_update_time = calendar.last_update_time
+        calendar.save()
+        self.assertNotEqual(previous_update_time, calendar.last_update_time)
+
+        # Make sure calendar update time changed with new event.
+        start_after = timezone.now() + datetime.timedelta(days=1)
+        end_after = start_after + datetime.timedelta(hours=1)
+        event = self.__create_event(start_after, end_after)
+        previous_update_time = calendar.last_update_time
+        calendar.events.add(event)
+        self.assertNotEqual(previous_update_time, calendar.last_update_time)

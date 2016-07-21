@@ -6,6 +6,7 @@ from dateutil import rrule
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.db.models import Q
+from django.db.models import signals
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import date
@@ -231,7 +232,7 @@ class Event(models.Model):
                 rule = self.get_rrule_object()
 
             o_starts = rule.between(start-difference, end, inc=True)
-            
+
             for o_start in o_starts:
                 o_end = o_start + difference
                 occurrences.append(self._create_occurrence(o_start, o_end))
@@ -526,3 +527,16 @@ class Occurrence(models.Model):
     def __eq__(self, other):
         return (isinstance(other, Occurrence) and
                 self.original_start == other.original_start and self.original_end == other.original_end)
+
+
+def calendar_changed(sender, instance, **kwargs):
+    '''
+    Calendar update time has to be changed with new event.
+    '''
+    calendar = instance.calendar
+    if calendar:
+        calendar.last_update_time = timezone.now()
+        calendar.save()
+
+
+signals.post_save.connect(calendar_changed, sender=Event)
