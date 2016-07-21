@@ -142,6 +142,7 @@ class Calendar(models.Model):
         verbose_name = _('calendar')
         verbose_name_plural = _('calendar')
         app_label = 'schedule'
+        ordering = ('name',)
 
     def __unicode__(self):
         return self.name
