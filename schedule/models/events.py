@@ -44,7 +44,7 @@ class Event(models.Model):
     calendar = models.ForeignKey(Calendar, null=True, blank=True, verbose_name=_("calendar"))
     objects = EventManager()
 
-    recent_start = models.TextField(null=True)
+    recent_start = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name = _('event')
@@ -231,7 +231,7 @@ class Event(models.Model):
                 rule = self.get_rrule_object()
 
             o_starts = rule.between(start-difference, end, inc=True)
-            
+
             for o_start in o_starts:
                 o_end = o_start + difference
                 occurrences.append(self._create_occurrence(o_start, o_end))
