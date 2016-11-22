@@ -166,7 +166,7 @@ class Event(models.Model):
 
         if self.pk and not skip_booster:
             # performance booster for occurrences relationship
-            Event.objects.prefetch_related('occurrences').get(pk=self.pk)
+            Event.objects.prefetch_related('occurrence_set').get(pk=self.pk)
 
         if persisted_occurrences is None:
             persisted_occurrences = self.occurrence_set.all()
