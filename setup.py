@@ -40,6 +40,7 @@ setup(
         'icalendar>=3.8.4',
         'django-annoying>=0.7.9',
         'coverage>=3.6',
+        'pyyaml>=3.11',
     ],
     dependency_links = ['http://github.com/AltSchool/dateutil/tarball/master#egg=python-dateutil-2.1.post20140303'],
     license='BSD',
