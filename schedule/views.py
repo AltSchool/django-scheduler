@@ -5,12 +5,10 @@ from urllib import quote
 
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponseRedirect, Http404
-from django.template import RequestContext
 from django.core.urlresolvers import reverse
-from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import DeleteView
 
@@ -34,9 +32,9 @@ def calendar(request, calendar_slug, template='schedule/calendar.html'):
         The Calendar object designated by the ``calendar_slug``.
     """
     calendar = get_object_or_404(Calendar, slug=calendar_slug)
-    return render_to_response(template, {
+    return render(request, template, {
         "calendar": calendar,
-    }, context_instance=RequestContext(request))
+    })
 
 
 def calendar_by_periods(request, calendar_slug, periods=None, template_name="schedule/calendar_by_period.html"):
@@ -88,19 +86,19 @@ def calendar_by_periods(request, calendar_slug, periods=None, template_name="sch
     event_list = GET_EVENTS_FUNC(request, calendar)
     local_timezone = request.session.setdefault('django_timezone', 'UTC')
     local_timezone = pytz.timezone(local_timezone)
-    period_objects = {} 
+    period_objects = {}
     for period in periods:
         if period.__name__.lower() == 'year':
-            period_objects[period.__name__.lower()] = period(event_list, date, None, local_timezone) 
+            period_objects[period.__name__.lower()] = period(event_list, date, None, local_timezone)
         else:
             period_objects[period.__name__.lower()] = period(event_list, date, None, None, local_timezone)
-    return render_to_response(template_name, {
+    return render(request, template_name, {
         'date': date,
         'periods': period_objects,
         'calendar': calendar,
         'weekday_names': weekday_names,
         'here': quote(request.get_full_path()),
-    }, context_instance=RequestContext(request), )
+    }, )
 
 
 def event(request, event_id, template_name="schedule/event.html"):
@@ -142,11 +140,11 @@ def occurrence(request, event_id, template_name="schedule/occurrence.html", *arg
     """
     event, occurrence = get_occurrence(event_id, *args, **kwargs)
     back_url = request.META.get('HTTP_REFERER', None)
-    return render_to_response(template_name, {
+    return render(request, template_name, {
         'event': event,
         'occurrence': occurrence,
         'back_url': back_url,
-    }, context_instance=RequestContext(request))
+    })
 
 
 @check_event_permissions
@@ -161,11 +159,11 @@ def edit_occurrence(request, event_id, template_name="schedule/edit_occurrence.h
         next = next or get_next_url(request, occurrence.get_absolute_url())
         return HttpResponseRedirect(next)
     next = next or get_next_url(request, occurrence.get_absolute_url())
-    return render_to_response(template_name, {
+    return render(request, template_name, {
         'form': form,
         'occurrence': occurrence,
         'next': next,
-    }, context_instance=RequestContext(request))
+    })
 
 
 @check_event_permissions
@@ -178,10 +176,10 @@ def cancel_occurrence(request, event_id, template_name='schedule/cancel_occurren
     event, occurrence = get_occurrence(event_id, *args, **kwargs)
     next = kwargs.get('next', None) or get_next_url(request, event.get_absolute_url())
     if request.method != "POST":
-        return render_to_response(template_name, {
+        return render(request, template_name, {
             "occurrence": occurrence,
             "next": next,
-        }, context_instance=RequestContext(request))
+        })
     occurrence.cancel()
     return HttpResponseRedirect(next)
 
@@ -274,11 +272,11 @@ def create_or_edit_event(request, calendar_slug, event_id=None, next=None, templ
         return HttpResponseRedirect(next)
 
     next = get_next_url(request, next)
-    return render_to_response(template_name, {
+    return render(request, template_name, {
         "form": form,
         "calendar": calendar,
         "next": next
-    }, context_instance=RequestContext(request))
+    })
 
 
 class DeleteEventView(DeleteView):
