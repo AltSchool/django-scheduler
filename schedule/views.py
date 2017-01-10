@@ -323,8 +323,9 @@ def get_next_url(request, default):
     next = default
     if OCCURRENCE_CANCEL_REDIRECT:
         next = OCCURRENCE_CANCEL_REDIRECT
-    if 'next' in request.REQUEST and check_next_url(request.REQUEST['next']) is not None:
-        next = request.REQUEST['next']
+    request_next = request.GET.get('next', None) or request.POST.get('next', None)
+    if request_next is not None and check_next_url(request_next) is not None:
+        next = request_next
     return next
 
 
