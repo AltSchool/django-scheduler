@@ -29,7 +29,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'schedule',
-    'tests'
+    'tests',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
