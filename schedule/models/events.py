@@ -276,8 +276,8 @@ class Event(models.Model):
         occ_replacer = OccurrenceReplacer(self.occurrence_set.all())
         generator = self._occurrences_after_generator(after)
         while True:
-            next = next(generator)
-            yield occ_replacer.get_occurrence(next)
+            next_occ = next(generator)
+            yield occ_replacer.get_occurrence(next_occ)
 
 
 class EventRelationManager(models.Manager):

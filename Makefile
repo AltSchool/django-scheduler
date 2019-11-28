@@ -4,7 +4,7 @@
 install: .venv
 	. venv/bin/activate; pip install -r schedule/requirements.txt
 
-test: install
+test:
 	. venv/bin/activate; python manage.py test tests --settings=tests.test_settings
 
 clean:

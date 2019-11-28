@@ -61,10 +61,10 @@ class EventListManager(object):
             generator = occurrences[0][1]
 
             try:
-                next = heapq.heapreplace(occurrences, (next(generator), generator))[0]
+                next_occ = heapq.heapreplace(occurrences, (next(generator), generator))[0]
             except StopIteration:
-                next = heapq.heappop(occurrences)[0]
-            yield occ_replacer.get_occurrence(next)
+                next_occ = heapq.heappop(occurrences)[0]
+            yield occ_replacer.get_occurrence(next_occ)
 
 
 class OccurrenceReplacer(object):
