@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.utils.six.moves.builtins import str
 
 from django.http import HttpResponse

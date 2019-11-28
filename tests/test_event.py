@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
@@ -63,8 +64,8 @@ class TestEvent(TestCase):
         # Rule that was defined several years ago and occurrences are fetched for a much later time
         event_params = {
             'title': 'Edge case event test one',
-            'start': datetime.datetime(2009, 11, 02, 8, 0, tzinfo=pytz.utc),
-            'end': datetime.datetime(2009, 11, 02, 8, 0, tzinfo=pytz.utc),
+            'start': datetime.datetime(2009, 11, 0o2, 8, 0, tzinfo=pytz.utc),
+            'end': datetime.datetime(2009, 11, 0o2, 8, 0, tzinfo=pytz.utc),
             'rule': rule_weekly
         }
 

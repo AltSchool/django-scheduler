@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import pytz
 import datetime
 import calendar as standardlib_calendar
@@ -9,6 +10,7 @@ from django.utils.dates import WEEKDAYS, WEEKDAYS_ABBR
 from schedule.conf.settings import FIRST_DAY_OF_WEEK, SHOW_CANCELLED_OCCURRENCES
 from schedule.models import Occurrence
 from django.utils import timezone
+from six.moves import range
 
 weekday_names = []
 weekday_abbrs = []
@@ -145,7 +147,7 @@ class Period(object):
         period = self.create_sub_period(cls)
         while period.start < self.end:
             yield self.create_sub_period(cls, period.start, tzinfo)
-            period = period.next()
+            period = next(period)
 
     @property
     def start(self):

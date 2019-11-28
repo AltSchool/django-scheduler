@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from django.conf import settings as django_settings
 import pytz
 from dateutil import rrule
@@ -16,7 +17,7 @@ from schedule.conf import settings
 from schedule.models.rules import Rule
 from schedule.models.calendars import Calendar
 from schedule.utils import OccurrenceReplacer
-import cPickle as pickle
+import six.moves.cPickle as pickle
 from schedule.utils import get_boolean
 
 class EventManager(models.Manager):
@@ -260,7 +261,7 @@ class Event(models.Model):
         date_iter = iter(rule)
         difference = self.end - self.start
         while True:
-            o_start = date_iter.next()
+            o_start = next(date_iter)
             if o_start > self.end_recurring_period:
                 raise StopIteration
             o_end = o_start + difference
@@ -275,7 +276,7 @@ class Event(models.Model):
         occ_replacer = OccurrenceReplacer(self.occurrence_set.all())
         generator = self._occurrences_after_generator(after)
         while True:
-            next = generator.next()
+            next = next(generator)
             yield occ_replacer.get_occurrence(next)
 
 

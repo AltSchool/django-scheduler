@@ -1,4 +1,5 @@
 # Django settings for paquetin project.
+from __future__ import absolute_import
 import os
 
 PROJECT_PATH = os.path.realpath(os.path.dirname(__file__))

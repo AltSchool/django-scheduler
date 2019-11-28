@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.contrib import admin
 
 from schedule.models import Calendar, Event, CalendarRelation, Rule
