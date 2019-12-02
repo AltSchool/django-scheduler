@@ -177,6 +177,9 @@ class Year(Period):
         return Year(self.events, self.end, tzinfo=self.tzinfo)
     next = next_year
 
+    def __next__(self):
+        return self.next_year()
+
     def prev_year(self):
         start = datetime.datetime(self.start.year - 1, self.start.month, self.start.day)
         return Year(self.events, start, tzinfo=self.tzinfo)
@@ -230,6 +233,9 @@ class Month(Period):
     def next_month(self):
         return Month(self.events, self.end, tzinfo=self.tzinfo)
     next = next_month
+
+    def __next__(self):
+        return self.next_month()
 
     def prev_month(self):
         start = (self.start - datetime.timedelta(days=1)).replace(day=1, tzinfo=self.tzinfo)
@@ -297,6 +303,9 @@ class Week(Period):
     def next_week(self):
         return Week(self.events, self.end, tzinfo=self.tzinfo)
     next = next_week
+
+    def __next__(self):
+        return self.next_week()
 
     def current_month(self):
         return Month(self.events, self.start, tzinfo=self.tzinfo)
@@ -385,6 +394,9 @@ class Day(Period):
     def next_day(self):
         return Day(self.events, self.end, tzinfo=self.tzinfo)
     next = next_day
+
+    def __next__(self):
+        return self.next_day()
 
     def current_year(self):
         return Year(self.events, self.start, tzinfo=self.tzinfo)
