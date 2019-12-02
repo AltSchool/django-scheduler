@@ -55,7 +55,11 @@ def daily_table(context, day, width, width_slot, height, start=8, end=20, increm
       end - hour at which the day ends
       increment - size of a time slot (in minutes)
     """
-    user = context['request'].user
+    request = context.get('request', None)
+    if not request:
+        return context
+
+    user = request.user
     addable = CHECK_EVENT_PERM_FUNC(None, user)
     if 'calendar' in context:
         addable &= CHECK_CALENDAR_PERM_FUNC(context['calendar'], user)
