@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import json
 import pytz
 import datetime
-from urllib import quote
+from six.moves.urllib.parse import quote
 
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required

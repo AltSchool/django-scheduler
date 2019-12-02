@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import pytz
 import datetime
 
@@ -16,7 +17,7 @@ from schedule.views import check_next_url, coerce_date_dict
 
 
 class TestViews(TestCase):
-    fixtures = ['schedule.json']
+    fixtures = ['tests/fixtures/schedule.json']
 
     def setUp(self):
         self.rule = Rule.objects.create(frequency="DAILY")
@@ -73,7 +74,7 @@ class TestViewUtils(TestCase):
 
 
 class TestUrls(TestCase):
-    fixtures = ['schedule.json']
+    fixtures = ['tests/fixtures/schedule.json']
     highest_event_id = 7
 
     def test_calendar_view(self):

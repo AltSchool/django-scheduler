@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from functools import wraps
 import pytz
 import heapq
@@ -49,7 +50,7 @@ class EventListManager(object):
 
         for generator in generators:
             try:
-                heapq.heappush(occurrences, (generator.next(), generator))
+                heapq.heappush(occurrences, (next(generator), generator))
             except StopIteration:
                 pass
 
@@ -60,10 +61,10 @@ class EventListManager(object):
             generator = occurrences[0][1]
 
             try:
-                next = heapq.heapreplace(occurrences, (generator.next(), generator))[0]
+                next_occ = heapq.heapreplace(occurrences, (next(generator), generator))[0]
             except StopIteration:
-                next = heapq.heappop(occurrences)[0]
-            yield occ_replacer.get_occurrence(next)
+                next_occ = heapq.heappop(occurrences)[0]
+            yield occ_replacer.get_occurrence(next_occ)
 
 
 class OccurrenceReplacer(object):

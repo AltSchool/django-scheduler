@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from schedule.models import Calendar
 from django.contrib.syndication.views import Feed, FeedDoesNotExist
 from django.core.exceptions import ObjectDoesNotExist

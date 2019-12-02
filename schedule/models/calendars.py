@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import pytz
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
@@ -10,6 +11,7 @@ from django.template.defaultfilters import slugify
 import datetime
 from schedule.utils import EventListManager
 from django.utils import timezone
+import six
 
 
 class CalendarManager(models.Manager):
@@ -76,7 +78,7 @@ class CalendarManager(models.Manager):
             return self.get_calendar_for_object(obj, distinction)
         except Calendar.DoesNotExist:
             if name is None:
-                calendar = Calendar(name=unicode(obj))
+                calendar = Calendar(name=six.text_type(obj))
             else:
                 calendar = Calendar(name=name)
             calendar.slug = slugify(calendar.name)

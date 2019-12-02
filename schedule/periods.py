@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import pytz
 import datetime
 import calendar as standardlib_calendar
@@ -9,6 +10,7 @@ from django.utils.dates import WEEKDAYS, WEEKDAYS_ABBR
 from schedule.conf.settings import FIRST_DAY_OF_WEEK, SHOW_CANCELLED_OCCURRENCES
 from schedule.models import Occurrence
 from django.utils import timezone
+from six.moves import range
 
 weekday_names = []
 weekday_abbrs = []
@@ -145,7 +147,7 @@ class Period(object):
         period = self.create_sub_period(cls)
         while period.start < self.end:
             yield self.create_sub_period(cls, period.start, tzinfo)
-            period = period.next()
+            period = next(period)
 
     @property
     def start(self):
@@ -174,6 +176,9 @@ class Year(Period):
     def next_year(self):
         return Year(self.events, self.end, tzinfo=self.tzinfo)
     next = next_year
+
+    def __next__(self):
+        return self.next_year()
 
     def prev_year(self):
         start = datetime.datetime(self.start.year - 1, self.start.month, self.start.day)
@@ -228,6 +233,9 @@ class Month(Period):
     def next_month(self):
         return Month(self.events, self.end, tzinfo=self.tzinfo)
     next = next_month
+
+    def __next__(self):
+        return self.next_month()
 
     def prev_month(self):
         start = (self.start - datetime.timedelta(days=1)).replace(day=1, tzinfo=self.tzinfo)
@@ -295,6 +303,9 @@ class Week(Period):
     def next_week(self):
         return Week(self.events, self.end, tzinfo=self.tzinfo)
     next = next_week
+
+    def __next__(self):
+        return self.next_week()
 
     def current_month(self):
         return Month(self.events, self.start, tzinfo=self.tzinfo)
@@ -383,6 +394,9 @@ class Day(Period):
     def next_day(self):
         return Day(self.events, self.end, tzinfo=self.tzinfo)
     next = next_day
+
+    def __next__(self):
+        return self.next_day()
 
     def current_year(self):
         return Year(self.events, self.start, tzinfo=self.tzinfo)

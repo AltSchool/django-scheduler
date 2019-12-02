@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import datetime
 from django.conf import settings
 from django import template
@@ -8,6 +10,7 @@ from django.utils.safestring import mark_safe
 from schedule.conf.settings import CHECK_EVENT_PERM_FUNC, CHECK_CALENDAR_PERM_FUNC
 from schedule.models import Calendar
 from schedule.periods import weekday_names, weekday_abbrs
+from six.moves import range
 
 register = template.Library()
 
@@ -18,7 +21,7 @@ def month_table(context, calendar, month, size="regular", shift=None):
         if shift == -1:
             month = month.prev()
         if shift == 1:
-            month = month.next()
+            month = next(month)
     if size == "small":
         context['day_names'] = weekday_abbrs
     else:
@@ -52,7 +55,11 @@ def daily_table(context, day, width, width_slot, height, start=8, end=20, increm
       end - hour at which the day ends
       increment - size of a time slot (in minutes)
     """
-    user = context['request'].user
+    request = context.get('request', None)
+    if not request:
+        return context
+
+    user = request.user
     addable = CHECK_EVENT_PERM_FUNC(None, user)
     if 'calendar' in context:
         addable &= CHECK_CALENDAR_PERM_FUNC(context['calendar'], user)
@@ -91,7 +98,7 @@ def options(context, occurrence):
     user = context['request'].user
     if CHECK_EVENT_PERM_FUNC(occurrence.event, user) and CHECK_CALENDAR_PERM_FUNC(occurrence.event.calendar, user):
         context['edit_occurrence'] = occurrence.get_edit_url()
-        print context['edit_occurrence']
+        print(context['edit_occurrence'])
         context['cancel_occurrence'] = occurrence.get_cancel_url()
         context['delete_event'] = reverse('delete_event', args=(occurrence.event.id,))
         context['edit_event'] = reverse('edit_event', args=(occurrence.event.calendar.slug, occurrence.event.id,))
@@ -135,7 +142,7 @@ def do_get_calendar_for_object(parser, token):
     elif len(contents) == 5:
         tag_name, content_object, distinction, _, context_var = token.split_contents()
     else:
-        raise template.TemplateSyntaxError, "%r tag follows form %r <content_object> as <context_var>" % (token.contents.split()[0], token.contents.split()[0])
+        raise template.TemplateSyntaxError("%r tag follows form %r <content_object> as <context_var>" % (token.contents.split()[0], token.contents.split()[0]))
     return CalendarNode(content_object, distinction, context_var)
 
 
@@ -172,9 +179,9 @@ def do_get_or_create_calendar_for_object(parser, token):
             as_index = contents.index('as')
             context_var = contents[as_index + 1]
         else:
-            raise template.TemplateSyntaxError, "%r tag requires an a context variable: %r <content_object> [named <calendar name>] [by <distinction>] as <context_var>" % (token.split_contents()[0], token.split_contents()[0])
+            raise template.TemplateSyntaxError("%r tag requires an a context variable: %r <content_object> [named <calendar name>] [by <distinction>] as <context_var>" % (token.split_contents()[0], token.split_contents()[0]))
     else:
-        raise template.TemplateSyntaxError, "%r tag follows form %r <content_object> [named <calendar name>] [by <distinction>] as <context_var>" % (token.split_contents()[0], token.split_contents()[0])
+        raise template.TemplateSyntaxError("%r tag follows form %r <content_object> [named <calendar name>] [by <distinction>] as <context_var>" % (token.split_contents()[0], token.split_contents()[0]))
     return CreateCalendarNode(obj, distinction, context_var, name)
 
 register.tag('get_calendar', do_get_calendar_for_object)

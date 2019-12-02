@@ -1,4 +1,5 @@
 # Django settings for paquetin project.
+from __future__ import absolute_import
 import os
 
 PROJECT_PATH = os.path.realpath(os.path.dirname(__file__))
@@ -107,12 +108,12 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'schedule.urls'
 
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    PROJECT_PATH + '/templates/',
+TEMPLATES = (
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'DIRS': os.path.join(PROJECT_PATH, 'templates'),
+    },
 )
 
 INSTALLED_APPS = (
@@ -126,9 +127,9 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     'schedule',
-    'django_nose',
-    'django_coverage',
-    'south'
+    # 'django_nose',
+    # 'django_coverage',
+    # 'south'
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )

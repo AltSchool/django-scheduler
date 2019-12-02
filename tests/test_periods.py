@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 import pytz
 
@@ -6,6 +7,8 @@ from django.test import TestCase
 from schedule.conf.settings import FIRST_DAY_OF_WEEK
 from schedule.models import Event, Rule, Calendar
 from schedule.periods import Period, Month, Day, Year, Week
+from six.moves import range
+from six.moves import zip
 
 class TestPeriod(TestCase):
 

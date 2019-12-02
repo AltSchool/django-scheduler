@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from django.views.generic.list import ListView
 from schedule.models import Calendar

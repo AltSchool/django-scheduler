@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from dateutil.rrule import DAILY, MONTHLY, WEEKLY, YEARLY, HOURLY, MINUTELY, SECONDLY
 
 from django.db import models

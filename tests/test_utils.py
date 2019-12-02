@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 import pytz
 import datetime
@@ -38,14 +39,14 @@ class TestEventListManager(TestCase):
     def test_occurrences_after(self):
         eml = EventListManager([self.event1, self.event2])
         occurrences = eml.occurrences_after(datetime.datetime(2009, 4, 1, 0, 0, tzinfo=self.default_tzinfo))
-        self.assertEqual(occurrences.next().event, self.event1)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event2)
-        self.assertEqual(occurrences.next().event, self.event1)
+        self.assertEqual(next(occurrences).event, self.event1)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event2)
+        self.assertEqual(next(occurrences).event, self.event1)
         occurrences = eml.occurrences_after()
         self.assertEqual(list(occurrences), [])

@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import absolute_import
 import datetime
 from django.test import TestCase
 from schedule.forms import EventForm

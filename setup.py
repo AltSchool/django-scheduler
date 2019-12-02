@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from setuptools import setup
 
 
@@ -33,7 +34,7 @@ setup(
                  'Topic :: Utilities'],
     install_requires=[
         'python-dateutil>=2.1.post20140303',
-        'Django>=1.7',
+        'Django>=1.7,<=1.11',
         'argparse>=1.1',
         'pytz>=2013.9',
         'six>=1.3.0',

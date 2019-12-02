@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import
 import datetime
 import pytz
 
@@ -39,6 +40,7 @@ class TestCalendar(TestCase):
         start_after = timezone.now() + datetime.timedelta(days=1)
         end_after = start_after + datetime.timedelta(hours=1)
         event = self.__create_event(start_after, end_after)
+        event.save()
         calendar.events.add(event)
         occurrences = list(calendar.occurrences_after(timezone.now()))
         self.assertEquals(len(occurrences), 1)
@@ -51,6 +53,7 @@ class TestCalendar(TestCase):
         start_after = timezone.now() + datetime.timedelta(days=-1)
         end_after = start_after + datetime.timedelta(hours=1)
         event = self.__create_event(start_after, end_after)
+        event.save()
         calendar.events.add(event)
         occurrences = list(calendar.occurrences_after(timezone.now()))
         self.assertEquals(occurrences, [])
