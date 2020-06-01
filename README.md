@@ -1,2 +1,2 @@
-django-scheduler
+(Deprecated) django-scheduler
 ================
